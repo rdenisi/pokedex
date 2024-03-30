@@ -3,5 +3,7 @@
 GET {{Pokedex_HostAddress}}/api/pokemon/mewtwo
 Accept: application/json
 
+###
+
 GET {{Pokedex_HostAddress}}/api/pokemon/translated/mewtwo
 Accept: application/json

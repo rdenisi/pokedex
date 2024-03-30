@@ -1,5 +1,7 @@
 ﻿using Pokedex.Dtos;
+using Pokedex.Enums;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace Pokedex.Services
 {
@@ -7,35 +9,91 @@ namespace Pokedex.Services
 	{
 		private readonly IHttpClientFactory httpClientFactory = httpClientFactory;
 
+		private readonly JsonSerializerOptions jsonSerializerOptions = new()
+		{
+			PropertyNameCaseInsensitive = true
+		};
+
 		public async Task<PokemonDto> GetPokemonAsync(string name)
 		{
+			PokemonApiResponse pokemonApiResponse = await GetPokemonFromApi(name);
+			PokemonDto pokemonDto = ApiResponseToDto(pokemonApiResponse);
+			return pokemonDto;
+		}
+
+		public async Task<PokemonDto> TranslateAsync(string name)
+		{
+			PokemonApiResponse pokemonApiResponse = await GetPokemonFromApi(name);
+
+			PokemonDto pokemonDto = ApiResponseToDto(pokemonApiResponse);
+
+			string translationType = TranslationType.Shakespeare.ToString().ToLower();
+
+			if (pokemonApiResponse.Habitat.Name.Equals(Enums.Habitat.Cave.ToString(), StringComparison.CurrentCultureIgnoreCase) || pokemonApiResponse.IsLegendary)
+			{
+				translationType = TranslationType.Yoda.ToString().ToLower();
+			}
+
+			string cleanedDescription = CleanText(pokemonDto.Description);
+			FunTranslationsResponse funTranslationsResponse = await GetTranslationFromApi(translationType, cleanedDescription);
+			if (funTranslationsResponse.Success.Total == 1)
+			{
+				pokemonDto.Description = funTranslationsResponse.Contents.Translated;
+			}
+
+			return pokemonDto;
+		}
+
+		private async Task<PokemonApiResponse> GetPokemonFromApi(string name)
+		{
+			var apiUri = $"https://pokeapi.co/api/v2/pokemon-species/{name}";
+
 			var httpClient = httpClientFactory.CreateClient();
-			var httpResponse = await httpClient.GetAsync("https://pokeapi.co/api/v2/pokemon-species/mewtwo");
+			var httpResponse = await httpClient.GetAsync(apiUri);
 
 			if (httpResponse.StatusCode != System.Net.HttpStatusCode.OK)
 			{
 				throw new Exception("Ërror calling service");
 			}
 
-			var result = await httpResponse.Content.ReadAsStringAsync();
-			var dto = JsonSerializer.Deserialize<PokemonDto>(result, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-			return dto;
+			var apiResponseRaw = await httpResponse.Content.ReadAsStringAsync();
+
+			var apiResponseDto = JsonSerializer.Deserialize<PokemonApiResponse>(apiResponseRaw, jsonSerializerOptions);
+			return apiResponseDto;
 		}
 
-		public Task<PokemonDto> TranslateAsync(string name)
+		private async Task<FunTranslationsResponse> GetTranslationFromApi(string translationType, string text)
 		{
-			var dto = new PokemonDto
+			var apiUri = $"https://api.funtranslations.com/translate/{translationType}.json?text={text}";
+
+			var httpClient = httpClientFactory.CreateClient();
+			var httpResponse = await httpClient.GetAsync(apiUri);
+
+			if (httpResponse.StatusCode != System.Net.HttpStatusCode.OK)
 			{
-				Name = Reverse(name)
-			};
-			return Task.FromResult(dto);
+				throw new Exception("Ërror calling service");
+			}
+
+			var apiResponseRaw = await httpResponse.Content.ReadAsStringAsync();
+
+			var apiResponseDto = JsonSerializer.Deserialize<FunTranslationsResponse>(apiResponseRaw, jsonSerializerOptions);
+			return apiResponseDto;
 		}
 
-		public static string Reverse(string s)
+		private static PokemonDto ApiResponseToDto(PokemonApiResponse pokemonApiResponse)
 		{
-			char[] charArray = s.ToCharArray();
-			Array.Reverse(charArray);
-			return new string(charArray);
+			return new PokemonDto
+			{
+				Name = pokemonApiResponse.Name,
+				Description = pokemonApiResponse.FlavorTextEntries?.FirstOrDefault(e => (e.Language?.Name).Equals(Enums.Language.En.ToString(), StringComparison.CurrentCultureIgnoreCase)).FlavorText,
+				Habitat = pokemonApiResponse.Habitat?.Name,
+				IsLegendary = pokemonApiResponse.IsLegendary
+			};
+		}
+
+		private static string CleanText(string text)
+		{
+			return Regex.Replace(text, @"\n|\f", " ");
 		}
 	}
 }

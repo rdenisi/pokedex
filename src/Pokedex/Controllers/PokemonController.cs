@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Pokedex.Dtos;
 using Pokedex.Services;
 
 namespace Pokedex.Controllers
@@ -14,17 +15,17 @@ namespace Pokedex.Controllers
 		[Route("{pokemonName}")]
 		public async Task<IActionResult> GetPokemonInfo(string pokemonName)
 		{
-			logger.LogInformation(pokemonName);
-			var dto = await pokemonService.GetPokemonAsync(pokemonName);
+			logger.LogInformation("Called with pokemon name {pokemonName}", pokemonName);
+			PokemonDto dto = await pokemonService.GetPokemonAsync(pokemonName);
 			return Ok(dto);
 		}
 
 		[HttpGet]
 		[Route("translated/{pokemonName}")]
-		public IActionResult GetTranslatedPokemonInfo(string pokemonName)
+		public async Task<IActionResult> GetTranslatedPokemonInfo(string pokemonName)
 		{
-			logger.LogInformation(pokemonName);
-			var dto = pokemonService.TranslateAsync(pokemonName);
+			logger.LogInformation("Called with pokemon name {pokemonName}", pokemonName);
+			PokemonDto dto = await pokemonService.TranslateAsync(pokemonName);
 			return Ok(dto);
 		}
 	}
