@@ -1,3 +1,4 @@
+using Pokedex.Middleware;
 using Pokedex.Services;
 
 namespace Pokedex
@@ -20,6 +21,8 @@ namespace Pokedex
 			builder.Services.AddScoped<IPokemonService, PokemonService>();
 
 			var app = builder.Build();
+
+			app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 			// Configure the HTTP request pipeline.
 			if (app.Environment.IsDevelopment())

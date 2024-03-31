@@ -51,9 +51,15 @@ namespace Pokedex.Services
 			var httpClient = httpClientFactory.CreateClient();
 			var httpResponse = await httpClient.GetAsync(apiUri);
 
-			if (httpResponse.StatusCode != System.Net.HttpStatusCode.OK)
+			if (!httpResponse.IsSuccessStatusCode)
 			{
-				throw new Exception("Ërror calling service");
+				if (httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
+				{
+					throw new KeyNotFoundException($"The given key [{name}] was not found calling the pokeapi service.");
+				}
+
+				var error = await httpResponse.Content.ReadAsStringAsync();
+				throw new Exception($"An error occured calling the pokeapi service: [{error}]");
 			}
 
 			var apiResponseRaw = await httpResponse.Content.ReadAsStringAsync();
@@ -69,9 +75,10 @@ namespace Pokedex.Services
 			var httpClient = httpClientFactory.CreateClient();
 			var httpResponse = await httpClient.GetAsync(apiUri);
 
-			if (httpResponse.StatusCode != System.Net.HttpStatusCode.OK)
+			if (!httpResponse.IsSuccessStatusCode)
 			{
-				throw new Exception("Ërror calling service");
+				var error = await httpResponse.Content.ReadAsStringAsync();
+				throw new Exception($"An error occured calling the pokeapi service: [{error}]");
 			}
 
 			var apiResponseRaw = await httpResponse.Content.ReadAsStringAsync();
