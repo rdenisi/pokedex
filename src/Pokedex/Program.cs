@@ -1,44 +1,57 @@
+using Microsoft.OpenApi.Models;
 using Pokedex.Middleware;
 using Pokedex.Services;
 
 namespace Pokedex
 {
-	public class Program
-	{
-		public static void Main(string[] args)
-		{
-			var builder = WebApplication.CreateBuilder(args);
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            var builder = WebApplication.CreateBuilder(args);
 
-			// Add services to the container.
+            // Add services to the container.
 
-			builder.Services.AddControllers();
-			// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-			builder.Services.AddEndpointsApiExplorer();
-			builder.Services.AddSwaggerGen();
+            builder.Services.AddControllers();
+            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen(s =>
+            {
+                s.SwaggerDoc("v1",
+                    new OpenApiInfo
+                    {
+                        Title = "Pokedex API",
+                        Description = "A sample API that provides some informations about pokemon.",
+                        Version = "v1"
+                    });
 
-			builder.Services.AddHttpClient();
+                var filePath = Path.Combine(AppContext.BaseDirectory, "Pokedex.xml");
+                s.IncludeXmlComments(filePath);
+            });
 
-			builder.Services.AddScoped<IPokemonService, PokemonService>();
+            builder.Services.AddHttpClient();
 
-			var app = builder.Build();
+            builder.Services.AddScoped<IPokemonService, PokemonService>();
 
-			app.UseMiddleware<ExceptionHandlingMiddleware>();
+            var app = builder.Build();
 
-			// Configure the HTTP request pipeline.
-			if (app.Environment.IsDevelopment())
-			{
-				app.UseSwagger();
-				app.UseSwaggerUI();
-			}
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-			app.UseHttpsRedirection();
+            // Configure the HTTP request pipeline.
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI();
+            }
 
-			app.UseAuthorization();
+            app.UseHttpsRedirection();
+
+            app.UseAuthorization();
 
 
-			app.MapControllers();
+            app.MapControllers();
 
-			app.Run();
-		}
-	}
+            app.Run();
+        }
+    }
 }
