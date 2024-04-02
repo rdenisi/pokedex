@@ -37,4 +37,5 @@ Tests are written with the **XUnit** library, see https://www.nuget.org/packages
 
 Open a browser and navigate to the swagger url:
 
-![image](https://github.com/rdenisi/pokedex/assets/5156034/ebdd9198-1b83-4e1e-bb29-e742263af01d)
+![image](https://github.com/rdenisi/pokedex/assets/5156034/83d514e8-d89b-4cb4-a7d3-7eaa5d583324)
+
