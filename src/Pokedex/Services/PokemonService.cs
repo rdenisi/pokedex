@@ -16,6 +16,11 @@ namespace Pokedex.Services
 
 		public async Task<PokemonDto> GetPokemonAsync(string name)
 		{
+			if (string.IsNullOrWhiteSpace(name))
+			{
+				throw new ArgumentNullException(nameof(name), $"{nameof(name)} cannot be empty.");
+			}
+
 			PokemonApiResponse pokemonApiResponse = await GetPokemonFromApi(name);
 			PokemonDto pokemonDto = ApiResponseToDto(pokemonApiResponse);
 			return pokemonDto;
@@ -23,18 +28,23 @@ namespace Pokedex.Services
 
 		public async Task<PokemonDto> TranslateAsync(string name)
 		{
+			if (string.IsNullOrWhiteSpace(name))
+			{
+				throw new ArgumentNullException(nameof(name), $"{nameof(name)} cannot be empty.");
+			}
+
 			PokemonApiResponse pokemonApiResponse = await GetPokemonFromApi(name);
 
 			PokemonDto pokemonDto = ApiResponseToDto(pokemonApiResponse);
 
 			string translationType = TranslationType.Shakespeare.ToString().ToLower();
 
-			if (pokemonApiResponse.Habitat.Name.Equals(Enums.Habitat.Cave.ToString(), StringComparison.CurrentCultureIgnoreCase) || pokemonApiResponse.IsLegendary)
+			if (string.Equals(pokemonDto.Habitat, Enums.Habitat.Cave.ToString(), StringComparison.CurrentCultureIgnoreCase) || pokemonDto.IsLegendary)
 			{
 				translationType = TranslationType.Yoda.ToString().ToLower();
 			}
 
-			string cleanedDescription = CleanText(pokemonDto.Description);
+			string cleanedDescription = CleanText(pokemonDto.Description ?? string.Empty);
 			FunTranslationsResponse funTranslationsResponse = await GetTranslationFromApi(translationType, cleanedDescription);
 			if (funTranslationsResponse.Success.Total == 1)
 			{
@@ -48,7 +58,7 @@ namespace Pokedex.Services
 		{
 			var apiUri = $"https://pokeapi.co/api/v2/pokemon-species/{name}";
 
-			var httpClient = httpClientFactory.CreateClient();
+			var httpClient = httpClientFactory.CreateClient("PokeApi");
 			var httpResponse = await httpClient.GetAsync(apiUri);
 
 			if (!httpResponse.IsSuccessStatusCode)
@@ -72,7 +82,7 @@ namespace Pokedex.Services
 		{
 			var apiUri = $"https://api.funtranslations.com/translate/{translationType}.json?text={text}";
 
-			var httpClient = httpClientFactory.CreateClient();
+			var httpClient = httpClientFactory.CreateClient("FunTranslations");
 			var httpResponse = await httpClient.GetAsync(apiUri);
 
 			if (!httpResponse.IsSuccessStatusCode)
@@ -92,7 +102,7 @@ namespace Pokedex.Services
 			return new PokemonDto
 			{
 				Name = pokemonApiResponse.Name,
-				Description = pokemonApiResponse.FlavorTextEntries?.FirstOrDefault(e => (e.Language?.Name).Equals(Enums.Language.En.ToString(), StringComparison.CurrentCultureIgnoreCase)).FlavorText,
+				Description = pokemonApiResponse.FlavorTextEntries?.FirstOrDefault(e => string.Equals(e.Language?.Name, Enums.Language.En.ToString(), StringComparison.CurrentCultureIgnoreCase))?.FlavorText,
 				Habitat = pokemonApiResponse.Habitat?.Name,
 				IsLegendary = pokemonApiResponse.IsLegendary
 			};

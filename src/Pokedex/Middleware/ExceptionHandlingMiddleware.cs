@@ -2,16 +2,10 @@
 
 namespace Pokedex.Middleware
 {
-	public class ExceptionHandlingMiddleware
+	public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
 	{
-		private readonly RequestDelegate next;
-		private readonly ILogger<ExceptionHandlingMiddleware> logger;
-
-		public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
-		{
-			this.next = next;
-			this.logger = logger;
-		}
+		private readonly RequestDelegate next = next;
+		private readonly ILogger<ExceptionHandlingMiddleware> logger = logger;
 
 		public async Task InvokeAsync(HttpContext context)
 		{
@@ -32,6 +26,7 @@ namespace Pokedex.Middleware
 			ExceptionResponse response = exception switch
 			{
 				KeyNotFoundException _ => new ExceptionResponse(HttpStatusCode.NotFound, "The request key was not found."),
+				ArgumentNullException _ => new ExceptionResponse(HttpStatusCode.BadRequest, "The request has missing arguments."),
 				_ => new ExceptionResponse(HttpStatusCode.InternalServerError, "Internal server error. Please retry later.")
 			};
 
