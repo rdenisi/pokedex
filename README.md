@@ -1,5 +1,5 @@
 # Pokedex API
-This is a sample API that provide some information about pokemon.  
+This is a sample API that provides some informations about pokemon.  
 The informations are retrieved from 2 external services, one that provide all the information about a pokemon and one that apply a funny translation to its description.
 
 - **PokeAPI** - https://pokeapi.co/
@@ -23,7 +23,11 @@ The solution contains a WebAPI project and a Unit Test project:
   Retrieves the requested pokemon name informations.
 
 - **GET /api/pokemon/translated/{pokemonName}**  
-  Retrieves the requested pokemon name information, but with a "fun translation" of its description.
+  Retrieves the requested pokemon name informations, but with a "fun translation" of its description.   
+  The rules are:
+  - If the Pokemon’s habitat is cave or it’s a legendary Pokemon then apply the Yoda translation.
+  - For all other Pokemon, apply the Shakespeare translation.
+  - If you can’t translate the Pokemon’s description (for whatever reason 😉) then use the standard description
 
 ## Tests
 
