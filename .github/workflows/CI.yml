@@ -21,12 +21,12 @@ jobs:
       
       - name: Install dependencies
         run: dotnet restore
-        working-directory: ./src/*sln
+        working-directory: src/*sln
       
       - name: Build
         run: dotnet build
-        working-directory: ./src/*sln
+        working-directory: src/*sln
       
       - name: Test with the dotnet CLI
         run: dotnet test
-        working-directory: ./src/*sln
+        working-directory: src/*sln
